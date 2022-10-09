@@ -24,11 +24,11 @@ import { session } from './types'
 
 @Injectable()
 export class SessionsService {
-  protected logger = new Logger(SessionsService.name)
+  private logger = new Logger(SessionsService.name)
 
-  protected sessions = new Map<string, session>()
+  private sessions = new Map<string, session>()
 
-  protected retries = new Map<string, number>()
+  private retries = new Map<string, number>()
 
   constructor(private configService: ConfigService) {}
 
