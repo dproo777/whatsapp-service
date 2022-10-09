@@ -1,16 +1,16 @@
 import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
-import { SessionService } from '../session/session.service'
+import { SessionsService } from '../sessions/sessions.service'
 
 @Injectable()
 export class SessionValidatorMiddleware implements NestMiddleware {
-  constructor(private readonly sessionService: SessionService) {}
+  constructor(private readonly sessionService: SessionsService) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    const sessionId = req.headers['session'] as string | undefined
+    const session = req.headers['session'] as string | undefined
 
-    if (!this.sessionService.hasSession(sessionId)) {
-      throw new NotFoundException(`Session ${sessionId} not found`)
+    if (!this.sessionService.hasSession(session)) {
+      throw new NotFoundException(`Session ${session} not found`)
     }
 
     next()

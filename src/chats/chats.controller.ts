@@ -7,7 +7,7 @@ export class ChatsController {
   constructor(private readonly chatService: ChatsService) {}
 
   @Get()
-  findAll(@Session() sessionId: string) {
-    return this.chatService.findAll(sessionId)
+  findAll(@Session() session: string) {
+    return this.chatService.findAll(session)
   }
 }

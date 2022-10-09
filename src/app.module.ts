@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { ChatsModule } from './chats/chats.module'
-import { SessionModule } from './session/session.module'
+import { SessionsModule } from './sessions/sessions.module'
 import { SessionValidatorMiddleware } from './middlewares'
 import { ChatsController } from './chats/chats.controller'
 
@@ -11,7 +11,7 @@ import { ChatsController } from './chats/chats.controller'
       isGlobal: true,
     }),
     ChatsModule,
-    SessionModule,
+    SessionsModule,
   ],
 })
 export class AppModule implements NestModule {

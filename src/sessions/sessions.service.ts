@@ -23,8 +23,8 @@ import { CreateSessionDto } from './dto'
 import { session } from './types'
 
 @Injectable()
-export class SessionService {
-  protected logger = new Logger(SessionService.name)
+export class SessionsService {
+  protected logger = new Logger(SessionsService.name)
 
   protected sessions = new Map<string, session>()
 
@@ -32,18 +32,18 @@ export class SessionService {
 
   constructor(private configService: ConfigService) {}
 
-  async create(createSessionDto: CreateSessionDto, response: Response) {
-    const { sessionId } = createSessionDto
+  async create(createSessionDto: CreateSessionDto, res: Response) {
+    const { id } = createSessionDto
 
-    if (this.hasSession(sessionId)) {
+    if (this.hasSession(id)) {
       throw new ConflictException(
-        `Session ${sessionId} already exists, please use another session id to connect!`,
+        `Session ${id} already exists, please use another id to connect!`,
       )
     }
 
     const store = makeInMemoryStore({})
 
-    const sessionPath = this.getSessionPath(sessionId)
+    const sessionPath = this.getSessionPath(id)
 
     const { state, saveState } = useSingleFileAuthState(sessionPath)
 
@@ -53,13 +53,13 @@ export class SessionService {
       printQRInTerminal: false,
     })
 
-    const storePath = this.getStorePath(sessionId)
+    const storePath = this.getStorePath(id)
 
     store.readFromFile(storePath)
 
     store.bind(socket.ev)
 
-    this.sessions.set(sessionId, {
+    this.sessions.set(id, {
       ...socket,
       store,
     })
@@ -70,13 +70,13 @@ export class SessionService {
       const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode
 
       if (connection === 'open') {
-        this.retries.delete(sessionId)
+        this.retries.delete(id)
       } else if (connection === 'close') {
         if (
           statusCode === DisconnectReason.loggedOut ||
-          !this.shouldReconnect(sessionId)
+          !this.shouldReconnect(id)
         ) {
-          return this.deleteSession(sessionId)
+          return this.deleteSession(id)
         }
 
         const reconnectInterval =
@@ -84,16 +84,13 @@ export class SessionService {
             ? 0
             : this.configService.get<number>('RECONNECT_INTERVAL', 0)
 
-        setTimeout(
-          () => this.create(createSessionDto, response),
-          reconnectInterval,
-        )
+        setTimeout(() => this.create(createSessionDto, res), reconnectInterval)
       }
 
       if (event.qr) {
-        if (response && !response.headersSent) {
+        if (res && !res.headersSent) {
           try {
-            response.status(HttpStatus.OK).json({
+            res.status(HttpStatus.OK).json({
               data: {
                 qrCodeDataURL: await toDataURL(event.qr),
               },
@@ -113,7 +110,7 @@ export class SessionService {
         } catch {
           // no-op
         } finally {
-          this.deleteSession(sessionId)
+          this.deleteSession(id)
         }
       }
     })
@@ -136,21 +133,21 @@ export class SessionService {
     })
   }
 
-  findOne(sessionId: string) {
-    if (!this.hasSession(sessionId)) {
-      throw new NotFoundException(`Session ${sessionId} not found`)
+  findOne(id: string) {
+    if (!this.hasSession(id)) {
+      throw new NotFoundException(`Session ${id} not found`)
     }
 
     return {
-      message: `Session ${sessionId} found`,
+      message: `Session ${id} found`,
     }
   }
 
-  async remove(sessionId: string) {
-    const session = this.sessions.get(sessionId)
+  async remove(id: string) {
+    const session = this.sessions.get(id)
 
     if (!session) {
-      throw new NotFoundException(`Session ${sessionId} not found`)
+      throw new NotFoundException(`Session ${id} not found`)
     }
 
     try {
@@ -158,30 +155,30 @@ export class SessionService {
     } catch {
       // no-op
     } finally {
-      this.deleteSession(sessionId)
+      this.deleteSession(id)
     }
   }
 
-  hasSession(sessionId: string) {
-    return this.sessions.has(sessionId)
+  hasSession(id: string) {
+    return this.sessions.has(id)
   }
 
-  private shouldReconnect(sessionId: string) {
+  private shouldReconnect(id: string) {
     let maxRetry = this.configService.get<number>('MAX_RETRY', 1)
 
     if (maxRetry < 1) {
       maxRetry = 1
     }
 
-    let attempt = this.retries.get(sessionId) ?? 0
+    let attempt = this.retries.get(id) ?? 0
 
     if (attempt < maxRetry) {
       ++attempt
 
-      this.retries.set(sessionId, attempt)
+      this.retries.set(id, attempt)
 
       this.logger.log('Reconnecting...', {
-        sessionId: sessionId,
+        id: id,
         attempt,
       })
 
@@ -191,29 +188,29 @@ export class SessionService {
     return false
   }
 
-  private deleteSession(sessionId: string) {
-    const sessionPath = this.getSessionPath(sessionId)
+  private deleteSession(id: string) {
+    const sessionPath = this.getSessionPath(id)
 
     if (existsSync(sessionPath)) {
       unlinkSync(sessionPath)
     }
 
-    const storePath = this.getStorePath(sessionId)
+    const storePath = this.getStorePath(id)
 
     if (existsSync(storePath)) {
       unlinkSync(storePath)
     }
 
-    this.sessions.delete(sessionId)
+    this.sessions.delete(id)
 
-    this.retries.delete(sessionId)
+    this.retries.delete(id)
   }
 
-  private getSessionPath(sessionId: string) {
-    return join(__dirname, '../..', 'sessions', `${sessionId}.json`)
+  private getSessionPath(id: string) {
+    return join(__dirname, '../..', 'sessions', `${id}.json`)
   }
 
-  private getStorePath(sessionId: string) {
-    return join(__dirname, '../..', 'stores', `${sessionId}.json`)
+  private getStorePath(id: string) {
+    return join(__dirname, '../..', 'stores', `${id}.json`)
   }
 }
