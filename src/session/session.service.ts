@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -18,19 +19,23 @@ import makeWASocket, {
 } from '@adiwajshing/baileys'
 import { Boom } from '@hapi/boom'
 import { toDataURL } from 'qrcode'
-import { WhatsappService } from '../whatsapp/whatsapp.service'
 import { CreateSessionDto } from './dto'
+import { session } from './types'
 
 @Injectable()
-export class SessionService extends WhatsappService {
-  constructor(private configService: ConfigService) {
-    super()
-  }
+export class SessionService {
+  protected logger = new Logger(SessionService.name)
+
+  protected sessions = new Map<string, session>()
+
+  protected retries = new Map<string, number>()
+
+  constructor(private configService: ConfigService) {}
 
   async create(createSessionDto: CreateSessionDto, response: Response) {
     const { sessionId } = createSessionDto
 
-    if (this.sessions.has(sessionId)) {
+    if (this.hasSession(sessionId)) {
       throw new ConflictException(
         `Session ${sessionId} already exists, please use another session id to connect!`,
       )
@@ -132,7 +137,7 @@ export class SessionService extends WhatsappService {
   }
 
   findOne(sessionId: string) {
-    if (!this.sessions.has(sessionId)) {
+    if (!this.hasSession(sessionId)) {
       throw new NotFoundException(`Session ${sessionId} not found`)
     }
 
@@ -155,6 +160,10 @@ export class SessionService extends WhatsappService {
     } finally {
       this.deleteSession(sessionId)
     }
+  }
+
+  hasSession(sessionId: string) {
+    return this.sessions.has(sessionId)
   }
 
   private shouldReconnect(sessionId: string) {

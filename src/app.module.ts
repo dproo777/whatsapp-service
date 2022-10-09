@@ -1,15 +1,21 @@
-import { Module } from '@nestjs/common'
-import { SessionModule } from './session/session.module'
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
-import { WhatsappModule } from './whatsapp/whatsapp.module';
+import { ChatsModule } from './chats/chats.module'
+import { SessionModule } from './session/session.module'
+import { SessionValidatorMiddleware } from './middlewares'
+import { ChatsController } from './chats/chats.controller'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ChatsModule,
     SessionModule,
-    WhatsappModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(SessionValidatorMiddleware).forRoutes(ChatsController)
+  }
+}
