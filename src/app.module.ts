@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { SessionModule } from './session/session.module'
 import { ConfigModule } from '@nestjs/config'
+import { WhatsappModule } from './whatsapp/whatsapp.module';
 
 @Module({
   imports: [
@@ -8,6 +9,7 @@ import { ConfigModule } from '@nestjs/config'
       isGlobal: true,
     }),
     SessionModule,
+    WhatsappModule,
   ],
 })
 export class AppModule {}
