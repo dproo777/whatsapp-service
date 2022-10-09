@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator'
 
-export class ConnectDto {
+export class CreateSessionDto {
   @IsString()
   @IsNotEmpty()
   sessionId: string
