@@ -163,6 +163,16 @@ export class SessionsService {
     return this.sessions.has(id)
   }
 
+  findSession(id: string) {
+    const session = this.sessions.get(id)
+
+    if (!session) {
+      throw new NotFoundException(`Session ${id} not found`)
+    }
+
+    return session
+  }
+
   private shouldReconnect(id: string) {
     let maxRetry = this.configService.get<number>('MAX_RETRY', 1)
 

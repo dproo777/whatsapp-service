@@ -5,7 +5,7 @@ import { CreateSessionDto } from './dto'
 
 @Controller('sessions')
 export class SessionsController {
-  constructor(private sessionsService: SessionsService) {}
+  constructor(private readonly sessionsService: SessionsService) {}
 
   @Post()
   create(@Body() createSessionDto: CreateSessionDto, @Res() res: Response) {
