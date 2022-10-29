@@ -7,15 +7,15 @@ import {
 import { delay } from '@adiwajshing/baileys'
 import { WAMessageCursor } from '@adiwajshing/baileys/lib/Types'
 import { SessionsService } from '../sessions/sessions.service'
-import { FindOneParamsDto, SendChatDto } from './dto'
+import { FindOneParamsDto, SendMessageDto } from './dto'
 import { session } from '../sessions/types'
 
 @Injectable()
-export class ChatsService {
+export class PersonsService {
   private logger: Logger
 
   constructor(private readonly sessionsService: SessionsService) {
-    this.logger = new Logger(ChatsService.name)
+    this.logger = new Logger(PersonsService.name)
   }
 
   findAll(sessionId: string) {
@@ -56,22 +56,22 @@ export class ChatsService {
     }
   }
 
-  async send(sessionId: string, sendChatDto: SendChatDto) {
+  async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
-    const receiver = this.formatPhone(sendChatDto.receiver)
+    const jid = this.formatJid(sendMessageDto.phone)
 
-    if (!(await this.isOnWhatsapp(session, receiver))) {
+    if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        receiver: 'Receiver is not on whatsapp',
+        person: 'Phone is not on whatsapp',
       })
     }
 
     try {
       await delay(1000)
 
-      await session.sendMessage(receiver, {
-        text: sendChatDto.message,
+      await session.sendMessage(jid, {
+        text: sendMessageDto.message,
       })
 
       return {
@@ -84,20 +84,20 @@ export class ChatsService {
     }
   }
 
-  async sendBulk(sessionId: string, sendChatDtos: SendChatDto[]) {
+  async sendMessages(sessionId: string, sendMessageDtos: SendMessageDto[]) {
     const session = this.sessionsService.findSession(sessionId)
 
     const errors = []
 
-    for (const [index, sendChatDto] of sendChatDtos.entries()) {
-      const receiver = this.formatPhone(sendChatDto.receiver)
+    for (const [index, sendMessageDto] of sendMessageDtos.entries()) {
+      const jid = this.formatJid(sendMessageDto.phone)
 
-      if (!(await this.isOnWhatsapp(session, receiver))) {
+      if (!(await this.isOnWhatsapp(session, jid))) {
         errors.push({
           index,
           code: 422,
           messages: {
-            receiver: 'Receiver is not on whatsapp',
+            person: 'Phone is not on whatsapp',
           },
         })
       }
@@ -105,8 +105,8 @@ export class ChatsService {
       try {
         await delay(1000)
 
-        await session.sendMessage(receiver, {
-          text: sendChatDto.message,
+        await session.sendMessage(jid, {
+          text: sendMessageDto.message,
         })
       } catch (e) {
         this.logger.log(e)
@@ -125,7 +125,7 @@ export class ChatsService {
       }
     }
 
-    if (errors.length === sendChatDtos.length) {
+    if (errors.length === sendMessageDtos.length) {
       throw new InternalServerErrorException('Failed to send all message')
     }
 
@@ -145,7 +145,7 @@ export class ChatsService {
     }
   }
 
-  private formatPhone(phone: string) {
+  private formatJid(phone: string) {
     return phone.endsWith('@s.whatsapp.net')
       ? phone
       : phone.replace(/\D/g, '').concat('@s.whatsapp.net')

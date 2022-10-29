@@ -1,9 +1,9 @@
 import { IsBooleanString, IsNotEmpty, IsString } from 'class-validator'
 
-export class SendChatDto {
+export class SendMessageDto {
   @IsString()
   @IsNotEmpty()
-  receiver: string
+  phone: string
 
   @IsBooleanString()
   @IsNotEmpty()

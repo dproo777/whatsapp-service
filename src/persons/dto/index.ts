@@ -1,2 +1,2 @@
 export * from './FindOneParams.dto'
-export * from './SendChat.dto'
+export * from './SendMessage.dto'

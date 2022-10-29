@@ -5,9 +5,9 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { delay } from '@adiwajshing/baileys'
-import { ChatsService } from '../chats/chats.service'
+import { PersonsService } from '../persons/persons.service'
 import { SessionsService } from '../sessions/sessions.service'
-import { FindOneParamsDto } from '../chats/dto'
+import { FindOneParamsDto } from '../persons/dto'
 import { SendMessageDto } from './dto'
 import { session } from '../sessions/types'
 
@@ -16,7 +16,7 @@ export class GroupsService {
   private logger: Logger
 
   constructor(
-    private readonly chatsService: ChatsService,
+    private readonly personsService: PersonsService,
     private readonly sessionsService: SessionsService,
   ) {
     this.logger = new Logger(GroupsService.name)
@@ -33,7 +33,7 @@ export class GroupsService {
     jid: string,
     findOneParamsDto: FindOneParamsDto,
   ) {
-    return this.chatsService.findOne(sessionId, jid, findOneParamsDto)
+    return this.personsService.findOne(sessionId, jid, findOneParamsDto)
   }
 
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {

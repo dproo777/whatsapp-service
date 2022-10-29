@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common'
 import { GroupsService } from './groups.service'
 import { SendMessageDto } from './dto'
-import { FindOneParamsDto } from '../chats/dto'
+import { FindOneParamsDto } from '../persons/dto'
 
 @Controller('groups')
 export class GroupsController {
