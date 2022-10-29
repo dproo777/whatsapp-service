@@ -61,9 +61,9 @@ export class ChatsService {
 
     const receiver = this.formatPhone(sendChatDto.receiver)
 
-    if (!(await this.isOnWhatsApp(session, receiver))) {
+    if (!(await this.isOnWhatsapp(session, receiver))) {
       throw new UnprocessableEntityException({
-        receiver: 'Receiver phone number is not on whatsapp',
+        receiver: 'Receiver is not on whatsapp',
       })
     }
 
@@ -92,12 +92,12 @@ export class ChatsService {
     for (const [index, sendChatDto] of sendChatDtos.entries()) {
       const receiver = this.formatPhone(sendChatDto.receiver)
 
-      if (!(await this.isOnWhatsApp(session, receiver))) {
+      if (!(await this.isOnWhatsapp(session, receiver))) {
         errors.push({
           index,
           code: 422,
           messages: {
-            receiver: 'Receiver phone number is not on whatsapp',
+            receiver: 'Receiver is not on whatsapp',
           },
         })
       }
@@ -135,7 +135,7 @@ export class ChatsService {
     }
   }
 
-  private async isOnWhatsApp(session: session, jid: string) {
+  private async isOnWhatsapp(session: session, jid: string) {
     try {
       const [result] = await session.onWhatsApp(jid)
 

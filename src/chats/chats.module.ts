@@ -7,5 +7,6 @@ import { SessionsModule } from '../sessions/sessions.module'
   imports: [SessionsModule],
   controllers: [ChatsController],
   providers: [ChatsService],
+  exports: [ChatsService],
 })
 export class ChatsModule {}
