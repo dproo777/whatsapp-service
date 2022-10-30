@@ -15,7 +15,7 @@ import makeWASocket, {
   delay,
   DisconnectReason,
   makeInMemoryStore,
-  useSingleFileAuthState,
+  useMultiFileAuthState,
 } from '@adiwajshing/baileys'
 import { Boom } from '@hapi/boom'
 import { toDataURL } from 'qrcode'
@@ -45,7 +45,7 @@ export class SessionsService {
 
     const sessionPath = this.getSessionPath(id)
 
-    const { state, saveState } = useSingleFileAuthState(sessionPath)
+    const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
 
     const socket = makeWASocket({
       auth: state,
@@ -115,7 +115,7 @@ export class SessionsService {
       }
     })
 
-    socket.ev.on('creds.update', saveState)
+    socket.ev.on('creds.update', saveCreds)
 
     socket.ev.on('messages.upsert', async (event) => {
       const message = event.messages[0]
