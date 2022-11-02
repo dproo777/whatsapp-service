@@ -115,13 +115,13 @@ export class SessionsService implements OnApplicationBootstrap {
           try {
             res.status(HttpStatus.OK).json({
               data: {
-                qrCodeDataURL: await toDataURL(event.qr),
+                qrCodeDataUrl: await toDataURL(event.qr),
               },
               message: 'Please scan the given QR code to continue!',
             })
           } catch {
             throw new InternalServerErrorException(
-              'Unable to convert QR code to data URL',
+              'Unable to convert QR code to data url',
             )
           }
 
