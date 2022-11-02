@@ -1,4 +1,4 @@
-import { existsSync, unlinkSync } from 'fs'
+import { existsSync, readdir, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
   ConflictException,
@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  OnApplicationBootstrap,
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
@@ -23,7 +24,7 @@ import { CreateSessionDto } from './dto'
 import { session } from './types'
 
 @Injectable()
-export class SessionsService {
+export class SessionsService implements OnApplicationBootstrap {
   private logger = new Logger(SessionsService.name)
 
   private sessions = new Map<string, session>()
@@ -32,7 +33,29 @@ export class SessionsService {
 
   constructor(private configService: ConfigService) {}
 
-  async create(createSessionDto: CreateSessionDto, res: Response) {
+  onApplicationBootstrap() {
+    readdir(this.getSessionPath(), async (err, files) => {
+      if (err) {
+        throw new InternalServerErrorException(err)
+      }
+
+      for (const file of files) {
+        if (!file.endsWith('.json')) {
+          continue
+        }
+
+        const filename = file.replace('.json', '')
+
+        const id = filename.substring(3)
+
+        await this.create({
+          id,
+        })
+      }
+    })
+  }
+
+  async create(createSessionDto: CreateSessionDto, res?: Response) {
     const { id } = createSessionDto
 
     if (this.hasSession(id)) {
@@ -216,11 +239,11 @@ export class SessionsService {
     this.retries.delete(id)
   }
 
-  private getSessionPath(id: string) {
-    return join(__dirname, '../..', 'sessions', `${id}.json`)
+  private getSessionPath(id?: string) {
+    return join(__dirname, '../..', 'sessions', id ? `${id}.json` : '')
   }
 
-  private getStorePath(id: string) {
-    return join(__dirname, '../..', 'stores', `${id}.json`)
+  private getStorePath(id?: string) {
+    return join(__dirname, '../..', 'stores', id ? `${id}.json` : '')
   }
 }
