@@ -16,7 +16,7 @@ import makeWASocket, {
   delay,
   DisconnectReason,
   makeInMemoryStore,
-  useMultiFileAuthState,
+  useSingleFileAuthState,
 } from '@adiwajshing/baileys'
 import { Boom } from '@hapi/boom'
 import { toDataURL } from 'qrcode'
@@ -58,17 +58,11 @@ export class SessionsService implements OnApplicationBootstrap {
   async create(createSessionDto: CreateSessionDto, res?: Response) {
     const { id } = createSessionDto
 
-    if (this.hasSession(id)) {
-      throw new ConflictException(
-        `Session ${id} already exists, please use another id to connect!`,
-      )
-    }
-
     const store = makeInMemoryStore({})
 
     const sessionPath = this.getSessionPath(id)
 
-    const { state, saveCreds } = await useMultiFileAuthState(sessionPath)
+    const { state, saveState } = useSingleFileAuthState(sessionPath)
 
     const socket = makeWASocket({
       auth: state,
@@ -138,7 +132,7 @@ export class SessionsService implements OnApplicationBootstrap {
       }
     })
 
-    socket.ev.on('creds.update', saveCreds)
+    socket.ev.on('creds.update', saveState)
 
     socket.ev.on('messages.upsert', async (event) => {
       const message = event.messages[0]
