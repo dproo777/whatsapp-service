@@ -1,7 +1,6 @@
 import { existsSync, readdir, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
-  ConflictException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
