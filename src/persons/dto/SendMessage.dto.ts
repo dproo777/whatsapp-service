@@ -3,7 +3,7 @@ import { IsBooleanString, IsNotEmpty, IsString } from 'class-validator'
 export class SendMessageDto {
   @IsString()
   @IsNotEmpty()
-  phone: string
+  whatsappId: string
 
   @IsBooleanString()
   @IsNotEmpty()

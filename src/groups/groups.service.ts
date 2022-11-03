@@ -39,11 +39,11 @@ export class GroupsService {
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
-    const jid = this.formatJid(sendMessageDto.group)
+    const jid = this.formatJid(sendMessageDto.whatsappId)
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        receiver: 'Group is not on whatsapp',
+        receiver: 'Whatsapp ID is not on whatsapp',
       })
     }
 
@@ -74,9 +74,9 @@ export class GroupsService {
     }
   }
 
-  private formatJid(group: string) {
-    return group.endsWith('@g.us')
-      ? group
-      : group.replace(/[^\d-]/g, '').concat('@g.us')
+  private formatJid(whatsappId: string) {
+    return whatsappId.endsWith('@g.us')
+      ? whatsappId
+      : whatsappId.replace(/[^\d-]/g, '').concat('@g.us')
   }
 }

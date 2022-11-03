@@ -59,7 +59,7 @@ export class PersonsService {
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
-    const jid = this.formatJid(sendMessageDto.phone)
+    const jid = this.formatJid(sendMessageDto.whatsappId)
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
@@ -90,14 +90,14 @@ export class PersonsService {
     const errors = []
 
     for (const [index, sendMessageDto] of sendMessageDtos.entries()) {
-      const jid = this.formatJid(sendMessageDto.phone)
+      const jid = this.formatJid(sendMessageDto.whatsappId)
 
       if (!(await this.isOnWhatsapp(session, jid))) {
         errors.push({
           index,
           code: 422,
           messages: {
-            person: 'Phone is not on whatsapp',
+            person: 'Whatsapp ID is not on whatsapp',
           },
         })
       }
@@ -145,9 +145,9 @@ export class PersonsService {
     }
   }
 
-  private formatJid(phone: string) {
-    return phone.endsWith('@s.whatsapp.net')
-      ? phone
-      : phone.replace(/\D/g, '').concat('@s.whatsapp.net')
+  private formatJid(whatsappId: string) {
+    return whatsappId.endsWith('@s.whatsapp.net')
+      ? whatsappId
+      : whatsappId.replace(/\D/g, '').concat('@s.whatsapp.net')
   }
 }
