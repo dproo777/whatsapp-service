@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware, NotFoundException } from '@nestjs/common'
+import {
+  Injectable,
+  NestMiddleware,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { NextFunction, Request, Response } from 'express'
 import { SessionsService } from '../sessions/sessions.service'
 
@@ -10,7 +14,7 @@ export class SessionValidatorMiddleware implements NestMiddleware {
     const session = req.headers['session'] as string | undefined
 
     if (!this.sessionService.hasSession(session)) {
-      throw new NotFoundException(`Session ${session} not found`)
+      throw new UnauthorizedException('Unauthenticated')
     }
 
     next()
