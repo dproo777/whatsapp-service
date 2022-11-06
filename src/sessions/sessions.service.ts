@@ -1,6 +1,7 @@
-import { existsSync, readdir, unlinkSync } from 'fs'
+import { existsSync, mkdirSync, readdir, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
+  BeforeApplicationShutdown,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -23,7 +24,9 @@ import { CreateSessionDto } from './dto'
 import { session } from './types'
 
 @Injectable()
-export class SessionsService implements OnApplicationBootstrap {
+export class SessionsService
+  implements OnApplicationBootstrap, BeforeApplicationShutdown
+{
   private logger = new Logger(SessionsService.name)
 
   private sessions = new Map<string, session>()
@@ -45,13 +48,17 @@ export class SessionsService implements OnApplicationBootstrap {
 
         const filename = file.replace('.json', '')
 
-        const id = filename.substring(3)
-
         await this.create({
-          id,
+          id: filename,
         })
       }
     })
+  }
+
+  beforeApplicationShutdown() {
+    this.sessions.forEach((session, sessionId) =>
+      session.store.writeToFile(this.getStorePath(sessionId)),
+    )
   }
 
   async create(createSessionDto: CreateSessionDto, res?: Response) {
@@ -233,10 +240,24 @@ export class SessionsService implements OnApplicationBootstrap {
   }
 
   private getSessionPath(id?: string) {
-    return join(__dirname, '../..', 'sessions', id ? `${id}.json` : '')
+    return join(
+      __dirname,
+      '..',
+      '..',
+      'storage',
+      'sessions',
+      id ? `${id}.json` : '',
+    )
   }
 
   private getStorePath(id?: string) {
-    return join(__dirname, '../..', 'stores', id ? `${id}.json` : '')
+    return join(
+      __dirname,
+      '..',
+      '..',
+      'storage',
+      'stores',
+      id ? `${id}.json` : '',
+    )
   }
 }
