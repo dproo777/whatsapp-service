@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdir, unlinkSync } from 'fs'
+import { existsSync, readdir, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
   BeforeApplicationShutdown,
