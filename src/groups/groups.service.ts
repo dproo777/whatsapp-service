@@ -43,7 +43,7 @@ export class GroupsService {
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        receiver: 'Whatsapp ID is not on whatsapp',
+        receiver: 'Group is not on whatsapp',
       })
     }
 

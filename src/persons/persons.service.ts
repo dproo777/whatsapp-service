@@ -63,7 +63,7 @@ export class PersonsService {
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        person: 'Phone is not on whatsapp',
+        person: 'Person is not on whatsapp',
       })
     }
 
