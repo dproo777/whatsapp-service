@@ -72,8 +72,9 @@ export class SessionsService
 
     const socket = makeWASocket({
       auth: state,
-      browser: Browsers.ubuntu('Chrome'),
+      browser: Browsers.baileys('Desktop'),
       printQRInTerminal: false,
+      syncFullHistory: true,
     })
 
     const storePath = this.getStorePath(id)
