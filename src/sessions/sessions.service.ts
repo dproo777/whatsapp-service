@@ -36,20 +36,18 @@ export class SessionsService
   constructor(private configService: ConfigService) {}
 
   onApplicationBootstrap() {
-    readdir(this.getSessionPath(), async (err, files) => {
+    readdir(this.getSessionPath(), async (err, basenames) => {
       if (err) {
         throw new InternalServerErrorException(err)
       }
 
-      for (const file of files) {
-        if (!file.endsWith('.json')) {
+      for (const basename of basenames) {
+        if (!basename.endsWith('.json')) {
           continue
         }
 
-        const filename = file.replace('.json', '')
-
         await this.create({
-          id: filename,
+          id: basename.replace('.json', ''),
         })
       }
     })
@@ -241,24 +239,10 @@ export class SessionsService
   }
 
   private getSessionPath(id?: string) {
-    return join(
-      __dirname,
-      '..',
-      '..',
-      'storage',
-      'sessions',
-      id ? `${id}.json` : '',
-    )
+    return join(process.cwd(), 'storage', 'sessions', id ? `${id}.json` : '')
   }
 
   private getStorePath(id?: string) {
-    return join(
-      __dirname,
-      '..',
-      '..',
-      'storage',
-      'stores',
-      id ? `${id}.json` : '',
-    )
+    return join(process.cwd(), 'storage', 'stores', id ? `${id}.json` : '')
   }
 }
