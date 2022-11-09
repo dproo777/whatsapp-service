@@ -92,6 +92,8 @@ export class SessionsService
       const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode
 
       if (connection === 'open') {
+        await socket.sendPresenceUpdate('unavailable', id)
+
         this.retries.delete(id)
       } else if (connection === 'close') {
         if (
@@ -140,6 +142,8 @@ export class SessionsService
     socket.ev.on('creds.update', saveState)
 
     socket.ev.on('messages.upsert', async (event) => {
+      await socket.sendPresenceUpdate('unavailable', id)
+
       const message = event.messages[0]
 
       if (!message.key.fromMe && event.type === 'notify') {
