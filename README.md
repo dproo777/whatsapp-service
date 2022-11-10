@@ -1,6 +1,6 @@
 # Whatsapp Service
 
-Whatsapp service based on the [Baileys](https://github.com/adiwajshing/Baileys) with features:
+Whatsapp service built on top of [Baileys](https://github.com/adiwajshing/Baileys) with features:
 
 - Manage sessions
 - Get people and groups
