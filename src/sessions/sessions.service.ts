@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readdir, unlinkSync } from 'fs'
+import { existsSync, lstatSync, readdir, rm, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
   BeforeApplicationShutdown,
@@ -226,7 +226,18 @@ export class SessionsService
     const sessionPath = this.getSessionPath(id)
 
     if (existsSync(sessionPath)) {
-      unlinkSync(sessionPath)
+      rm(
+        sessionPath,
+        {
+          recursive: true,
+          force: true,
+        },
+        (err) => {
+          if (err) {
+            throw new InternalServerErrorException(err)
+          }
+        },
+      )
     }
 
     const storePath = this.getStorePath(id)
