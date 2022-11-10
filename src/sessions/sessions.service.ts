@@ -1,4 +1,4 @@
-import { existsSync, readdir, unlinkSync } from 'fs'
+import { existsSync, lstatSync, readdir, unlinkSync } from 'fs'
 import { join } from 'path'
 import {
   BeforeApplicationShutdown,
@@ -16,7 +16,7 @@ import makeWASocket, {
   delay,
   DisconnectReason,
   makeInMemoryStore,
-  useSingleFileAuthState,
+  useMultiFileAuthState,
 } from '@adiwajshing/baileys'
 import { Boom } from '@hapi/boom'
 import { toDataURL } from 'qrcode'
@@ -36,18 +36,18 @@ export class SessionsService
   constructor(private configService: ConfigService) {}
 
   onApplicationBootstrap() {
-    readdir(this.getSessionPath(), async (err, basenames) => {
+    readdir(this.getSessionPath(), async (err, dirnames) => {
       if (err) {
         throw new InternalServerErrorException(err)
       }
 
-      for (const basename of basenames) {
-        if (!basename.endsWith('.json')) {
+      for (const dirname of dirnames) {
+        if (!lstatSync(this.getSessionPath(dirname)).isDirectory()) {
           continue
         }
 
         await this.create({
-          id: basename.replace('.json', ''),
+          id: dirname,
         })
       }
     })
@@ -64,9 +64,9 @@ export class SessionsService
 
     const store = makeInMemoryStore({})
 
-    const sessionPath = this.getSessionPath(id)
-
-    const { state, saveState } = useSingleFileAuthState(sessionPath)
+    const { state, saveCreds } = await useMultiFileAuthState(
+      this.getSessionPath(id),
+    )
 
     const socket = makeWASocket({
       auth: state,
@@ -75,9 +75,7 @@ export class SessionsService
       syncFullHistory: true,
     })
 
-    const storePath = this.getStorePath(id)
-
-    store.readFromFile(storePath)
+    store.readFromFile(this.getStorePath(id))
 
     store.bind(socket.ev)
 
@@ -139,7 +137,7 @@ export class SessionsService
       }
     })
 
-    socket.ev.on('creds.update', saveState)
+    socket.ev.on('creds.update', saveCreds)
 
     socket.ev.on('messages.upsert', async (event) => {
       await socket.sendPresenceUpdate('unavailable', id)
@@ -243,7 +241,7 @@ export class SessionsService
   }
 
   private getSessionPath(id?: string) {
-    return join(process.cwd(), 'storage', 'sessions', id ? `${id}.json` : '')
+    return join(process.cwd(), 'storage', 'sessions', id || '')
   }
 
   private getStorePath(id?: string) {
