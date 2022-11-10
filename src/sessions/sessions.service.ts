@@ -212,7 +212,7 @@ export class SessionsService
       this.retries.set(id, attempt)
 
       this.logger.log('Reconnecting...', {
-        id: id,
+        id,
         attempt,
       })
 
