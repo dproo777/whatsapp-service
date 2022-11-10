@@ -198,7 +198,7 @@ export class SessionsService
   }
 
   private shouldReconnect(id: string) {
-    let maxRetry = this.configService.get<number>('MAX_RETRY', 1)
+    let maxRetry = this.configService.get<number>('MAX_RETRY', 3)
 
     if (maxRetry < 1) {
       maxRetry = 1
