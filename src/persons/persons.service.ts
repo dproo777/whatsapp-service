@@ -97,7 +97,7 @@ export class PersonsService {
           index,
           code: 422,
           messages: {
-            person: 'Whatsapp ID is not on whatsapp',
+            person: 'Person is not on whatsapp',
           },
         })
       }

@@ -87,13 +87,13 @@ export class SessionsService
     socket.ev.on('connection.update', async (event) => {
       const { connection, lastDisconnect } = event
 
-      const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode
-
       if (connection === 'open') {
         await socket.sendPresenceUpdate('unavailable', id)
 
         this.retries.delete(id)
       } else if (connection === 'close') {
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode
+
         if (
           statusCode === DisconnectReason.loggedOut ||
           !this.shouldReconnect(id)
