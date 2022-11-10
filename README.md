@@ -17,19 +17,19 @@ yarn
 
 ## Serve
 
-- Running the app for development
+- Serve on development
 
 ```shell
 yarn start
 ```
 
-- Running the app for development with watch mode
+- Serve on development with watch mode
 
 ```shell
 yarn start:dev
 ```
 
-- Running the app for production
+- Serve on production
 
 ```shell
 yarn start:prod
