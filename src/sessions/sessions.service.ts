@@ -142,17 +142,19 @@ export class SessionsService
     socket.ev.on('messages.upsert', async (event) => {
       await socket.sendPresenceUpdate('unavailable', id)
 
-      const message = event.messages[0]
+      if (event.type === 'notify') {
+        for (const message of event.messages) {
+          if (!message.key.fromMe) {
+            await delay(1000)
 
-      if (!message.key.fromMe && event.type === 'notify') {
-        await delay(1000)
-
-        await socket.sendReceipt(
-          message.key.remoteJid,
-          message.key.participant,
-          [message.key.id],
-          'read',
-        )
+            await socket.sendReceipt(
+              message.key.remoteJid,
+              message.key.participant,
+              [message.key.id],
+              'read',
+            )
+          }
+        }
       }
     })
   }
