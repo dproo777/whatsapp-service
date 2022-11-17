@@ -1,4 +1,5 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -7,7 +8,6 @@ import {
 import { delay } from '@adiwajshing/baileys'
 import { PersonsService } from '../persons/persons.service'
 import { SessionsService } from '../sessions/sessions.service'
-import { FindOneParamsDto } from '../persons/dto'
 import { SendMessageDto } from './dto'
 import { session } from '../sessions/types'
 
@@ -28,14 +28,6 @@ export class GroupsService {
     return session.store.chats.filter((chat) => chat.id.endsWith('@g.us'))
   }
 
-  async findOne(
-    sessionId: string,
-    jid: string,
-    findOneParamsDto: FindOneParamsDto,
-  ) {
-    return this.personsService.findOne(sessionId, jid, findOneParamsDto)
-  }
-
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
@@ -43,7 +35,7 @@ export class GroupsService {
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        receiver: 'Group is not on whatsapp',
+        whatsappId: 'Group is not on whatsapp',
       })
     }
 
@@ -61,6 +53,57 @@ export class GroupsService {
       this.logger.log(e)
 
       throw new InternalServerErrorException('Failed to send message')
+    }
+  }
+
+  async sendMessages(sessionId: string, sendMessageDtos: SendMessageDto[]) {
+    const session = this.sessionsService.findSession(sessionId)
+
+    const errors = []
+
+    for (const [index, sendMessageDto] of sendMessageDtos.entries()) {
+      const jid = this.formatJid(sendMessageDto.whatsappId)
+
+      if (!(await this.isOnWhatsapp(session, jid))) {
+        errors.push({
+          index,
+          code: HttpStatus.UNPROCESSABLE_ENTITY,
+          messages: {
+            whatsappId: 'Group is not on whatsapp',
+          },
+        })
+      }
+
+      try {
+        await delay(1000)
+
+        await session.sendMessage(jid, {
+          text: sendMessageDto.message,
+        })
+      } catch (e) {
+        this.logger.log(e)
+
+        errors.push({
+          index,
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Failed to send message',
+        })
+      }
+    }
+
+    if (!errors.length) {
+      return {
+        message: 'All messages has been sent successfully',
+      }
+    }
+
+    if (errors.length === sendMessageDtos.length) {
+      throw new InternalServerErrorException('Failed to send all messages')
+    }
+
+    return {
+      message: 'Some messages has been sent successfully',
+      errors,
     }
   }
 

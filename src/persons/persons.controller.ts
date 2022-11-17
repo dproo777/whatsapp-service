@@ -1,14 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseArrayPipe,
-  Post,
-  Query,
-} from '@nestjs/common'
+import { Body, Controller, Get, ParseArrayPipe, Post } from '@nestjs/common'
 import { PersonsService } from './persons.service'
-import { FindOneParamsDto, SendMessageDto } from './dto'
+import { SendMessageDto } from './dto'
 import { Session } from '../decorators'
 
 @Controller('persons')
@@ -18,15 +10,6 @@ export class PersonsController {
   @Get()
   findAll(@Session() sessionId: string) {
     return this.personsService.findAll(sessionId)
-  }
-
-  @Get(':jid')
-  findOne(
-    @Session() sessionId: string,
-    @Param('jid') jid: string,
-    @Query() findOneParamsDto: FindOneParamsDto,
-  ) {
-    return this.personsService.findOne(sessionId, jid, findOneParamsDto)
   }
 
   @Post('send-message')

@@ -1,11 +1,11 @@
 import { IsNotEmpty, IsString } from 'class-validator'
 
 export class SendMessageDto {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   whatsappId: string
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   message: string
 }

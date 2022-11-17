@@ -165,7 +165,7 @@ export class SessionsService
     }
 
     return {
-      message: `Session ${id} found`,
+      message: `Session ${id} already exists`,
     }
   }
 

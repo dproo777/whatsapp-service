@@ -1,13 +1,13 @@
 import {
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common'
 import { delay } from '@adiwajshing/baileys'
-import { WAMessageCursor } from '@adiwajshing/baileys/lib/Types'
 import { SessionsService } from '../sessions/sessions.service'
-import { FindOneParamsDto, SendMessageDto } from './dto'
+import { SendMessageDto } from './dto'
 import { session } from '../sessions/types'
 
 @Injectable()
@@ -26,36 +26,6 @@ export class PersonsService {
     )
   }
 
-  async findOne(
-    sessionId: string,
-    jid: string,
-    findOneParamsDto: FindOneParamsDto,
-  ) {
-    const session = this.sessionsService.findSession(sessionId)
-
-    const cursor: WAMessageCursor = findOneParamsDto.id
-      ? {
-          before: {
-            id: findOneParamsDto.id,
-            fromMe: findOneParamsDto.fromMe,
-          },
-        }
-      : undefined
-
-    try {
-      return await session.store.loadMessages(
-        jid,
-        findOneParamsDto.limit,
-        cursor,
-        undefined,
-      )
-    } catch (e) {
-      this.logger.log(e)
-
-      throw new InternalServerErrorException('Failed to load messages')
-    }
-  }
-
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
@@ -63,7 +33,7 @@ export class PersonsService {
 
     if (!(await this.isOnWhatsapp(session, jid))) {
       throw new UnprocessableEntityException({
-        person: 'Person is not on whatsapp',
+        whatsappId: 'Person is not on whatsapp',
       })
     }
 
@@ -95,9 +65,9 @@ export class PersonsService {
       if (!(await this.isOnWhatsapp(session, jid))) {
         errors.push({
           index,
-          code: 422,
+          code: HttpStatus.UNPROCESSABLE_ENTITY,
           messages: {
-            person: 'Person is not on whatsapp',
+            whatsappId: 'Person is not on whatsapp',
           },
         })
       }
@@ -113,7 +83,7 @@ export class PersonsService {
 
         errors.push({
           index,
-          code: 500,
+          code: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to send message',
         })
       }
@@ -121,16 +91,16 @@ export class PersonsService {
 
     if (!errors.length) {
       return {
-        message: 'All message has been sent successfully',
+        message: 'All messages has been sent successfully',
       }
     }
 
     if (errors.length === sendMessageDtos.length) {
-      throw new InternalServerErrorException('Failed to send all message')
+      throw new InternalServerErrorException('Failed to send all messages')
     }
 
     return {
-      message: 'Some message has been sent successfully',
+      message: 'Some messages has been sent successfully',
       errors,
     }
   }
