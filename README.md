@@ -32,6 +32,19 @@ yarn start:prod
 
 ## Features
 
+User need to create session to make whatsapp socket.
+In order to access the protected endpoints, attach the session to the request header for instance: `session: +621234567890`.
+
+Public endpoints:
+
+- Endpoint `[POST] /sessions` on sessions module.
+
+Protected endpoints:
+
+- Endpoint `[GET] /sessions/{id}` and `[DELETE] /sessions/{id}` on sessions module.
+- All endpoints on persons module.
+- All endpoints on groups module.
+
 ### Sessions Module
 
 - Create Session
