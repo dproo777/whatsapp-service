@@ -1,24 +1,17 @@
 import {
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { delay } from '@adiwajshing/baileys'
-import { PersonsService } from '../persons/persons.service'
 import { SessionsService } from '../sessions/sessions.service'
 import { SendMessageDto } from './dto'
-import { session } from '../sessions/types'
 
 @Injectable()
 export class GroupsService {
   private logger: Logger
 
-  constructor(
-    private readonly personsService: PersonsService,
-    private readonly sessionsService: SessionsService,
-  ) {
+  constructor(private readonly sessionsService: SessionsService) {
     this.logger = new Logger(GroupsService.name)
   }
 
@@ -31,18 +24,8 @@ export class GroupsService {
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
-    const jid = this.formatJid(sendMessageDto.whatsappId)
-
-    if (!(await this.isOnWhatsapp(session, jid))) {
-      throw new UnprocessableEntityException({
-        whatsappId: 'Group is not on whatsapp',
-      })
-    }
-
     try {
-      await delay(1000)
-
-      await session.sendMessage(jid, {
+      await session.sendMessage(sendMessageDto.whatsappId, {
         text: sendMessageDto.message,
       })
 
@@ -62,22 +45,10 @@ export class GroupsService {
     const errors = []
 
     for (const [index, sendMessageDto] of sendMessageDtos.entries()) {
-      const jid = this.formatJid(sendMessageDto.whatsappId)
-
-      if (!(await this.isOnWhatsapp(session, jid))) {
-        errors.push({
-          index,
-          code: HttpStatus.UNPROCESSABLE_ENTITY,
-          messages: {
-            whatsappId: 'Group is not on whatsapp',
-          },
-        })
-      }
-
       try {
         await delay(1000)
 
-        await session.sendMessage(jid, {
+        await session.sendMessage(sendMessageDto.whatsappId, {
           text: sendMessageDto.message,
         })
       } catch (e) {
@@ -85,7 +56,6 @@ export class GroupsService {
 
         errors.push({
           index,
-          code: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to send message',
         })
       }
@@ -105,21 +75,5 @@ export class GroupsService {
       message: 'Some messages has been sent successfully',
       errors,
     }
-  }
-
-  private async isOnWhatsapp(session: session, jid: string) {
-    try {
-      const result = await session.groupMetadata(jid)
-
-      return !!result.id
-    } catch {
-      return false
-    }
-  }
-
-  private formatJid(whatsappId: string) {
-    return whatsappId.endsWith('@g.us')
-      ? whatsappId
-      : whatsappId.replace(/[^\d-]/g, '').concat('@g.us')
   }
 }

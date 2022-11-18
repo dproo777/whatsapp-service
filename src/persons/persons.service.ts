@@ -1,14 +1,11 @@
 import {
-  HttpStatus,
   Injectable,
   InternalServerErrorException,
   Logger,
-  UnprocessableEntityException,
 } from '@nestjs/common'
 import { delay } from '@adiwajshing/baileys'
 import { SessionsService } from '../sessions/sessions.service'
 import { SendMessageDto } from './dto'
-import { session } from '../sessions/types'
 
 @Injectable()
 export class PersonsService {
@@ -29,18 +26,8 @@ export class PersonsService {
   async sendMessage(sessionId: string, sendMessageDto: SendMessageDto) {
     const session = this.sessionsService.findSession(sessionId)
 
-    const jid = this.formatJid(sendMessageDto.whatsappId)
-
-    if (!(await this.isOnWhatsapp(session, jid))) {
-      throw new UnprocessableEntityException({
-        whatsappId: 'Person is not on whatsapp',
-      })
-    }
-
     try {
-      await delay(1000)
-
-      await session.sendMessage(jid, {
+      await session.sendMessage(sendMessageDto.whatsappId, {
         text: sendMessageDto.message,
       })
 
@@ -60,22 +47,10 @@ export class PersonsService {
     const errors = []
 
     for (const [index, sendMessageDto] of sendMessageDtos.entries()) {
-      const jid = this.formatJid(sendMessageDto.whatsappId)
-
-      if (!(await this.isOnWhatsapp(session, jid))) {
-        errors.push({
-          index,
-          code: HttpStatus.UNPROCESSABLE_ENTITY,
-          messages: {
-            whatsappId: 'Person is not on whatsapp',
-          },
-        })
-      }
-
       try {
         await delay(1000)
 
-        await session.sendMessage(jid, {
+        await session.sendMessage(sendMessageDto.whatsappId, {
           text: sendMessageDto.message,
         })
       } catch (e) {
@@ -83,7 +58,6 @@ export class PersonsService {
 
         errors.push({
           index,
-          code: HttpStatus.INTERNAL_SERVER_ERROR,
           message: 'Failed to send message',
         })
       }
@@ -103,21 +77,5 @@ export class PersonsService {
       message: 'Some messages has been sent successfully',
       errors,
     }
-  }
-
-  private async isOnWhatsapp(session: session, jid: string) {
-    try {
-      const [result] = await session.onWhatsApp(jid)
-
-      return result.exists
-    } catch {
-      return false
-    }
-  }
-
-  private formatJid(whatsappId: string) {
-    return whatsappId.endsWith('@s.whatsapp.net')
-      ? whatsappId
-      : whatsappId.replace(/\D/g, '').concat('@s.whatsapp.net')
   }
 }

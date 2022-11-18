@@ -1,7 +1,7 @@
 import { Body, Controller, Get, ParseArrayPipe, Post } from '@nestjs/common'
 import { GroupsService } from './groups.service'
 import { SendMessageDto } from './dto'
-import { Session } from '../common/decorators'
+import { InjectContext, Session } from '../common/decorators'
 
 @Controller('groups')
 export class GroupsController {
@@ -13,6 +13,7 @@ export class GroupsController {
   }
 
   @Post('send-message')
+  @InjectContext()
   sendMessage(
     @Session() sessionId: string,
     @Body() sendMessageDto: SendMessageDto,
@@ -21,6 +22,7 @@ export class GroupsController {
   }
 
   @Post('send-messages')
+  @InjectContext()
   sendMessages(
     @Session() sessionId: string,
     @Body(new ParseArrayPipe({ items: SendMessageDto }))
