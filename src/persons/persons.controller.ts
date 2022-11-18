@@ -1,7 +1,7 @@
 import { Body, Controller, Get, ParseArrayPipe, Post } from '@nestjs/common'
 import { PersonsService } from './persons.service'
 import { SendMessageDto } from './dto'
-import { Session } from '../decorators'
+import { Session } from '../common/decorators'
 
 @Controller('persons')
 export class PersonsController {

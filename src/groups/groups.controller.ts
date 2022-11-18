@@ -1,7 +1,7 @@
 import { Body, Controller, Get, ParseArrayPipe, Post } from '@nestjs/common'
 import { GroupsService } from './groups.service'
 import { SendMessageDto } from './dto'
-import { Session } from '../decorators'
+import { Session } from '../common/decorators'
 
 @Controller('groups')
 export class GroupsController {
