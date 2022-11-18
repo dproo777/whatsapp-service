@@ -5,7 +5,7 @@ import { GroupsModule } from './groups/groups.module'
 import { GroupsController } from './groups/groups.controller'
 import { SessionsModule } from './sessions/sessions.module'
 import { PersonsController } from './persons/persons.controller'
-import { SessionValidatorMiddleware } from './middlewares'
+import { SessionValidatorMiddleware } from './common/middlewares'
 
 @Module({
   imports: [
