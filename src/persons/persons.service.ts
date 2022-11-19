@@ -28,7 +28,7 @@ export class PersonsService {
 
     try {
       await session.sendMessage(sendMessageDto.whatsappId, {
-        text: sendMessageDto.message,
+        text: sendMessageDto.text,
       })
 
       return {

@@ -16,5 +16,5 @@ export class SendMessageDto extends ContextDto {
 
   @IsNotEmpty()
   @IsString()
-  message: string
+  text: string
 }
