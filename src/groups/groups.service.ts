@@ -49,7 +49,7 @@ export class GroupsService {
         await delay(1000)
 
         await session.sendMessage(sendMessageDto.whatsappId, {
-          text: sendMessageDto.message,
+          text: sendMessageDto.text,
         })
       } catch (e) {
         this.logger.log(e)
