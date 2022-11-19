@@ -13,7 +13,6 @@ import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
 import makeWASocket, {
   Browsers,
-  delay,
   DisconnectReason,
   makeInMemoryStore,
   useMultiFileAuthState,
@@ -112,7 +111,7 @@ export class SessionsService
       if (event.qr) {
         if (res && !res.headersSent) {
           try {
-            res.status(HttpStatus.OK).json({
+            res.status(HttpStatus.CREATED).json({
               data: {
                 qrCodeDataUrl: await toDataURL(event.qr),
               },
@@ -138,25 +137,6 @@ export class SessionsService
     })
 
     socket.ev.on('creds.update', saveCreds)
-
-    socket.ev.on('messages.upsert', async (event) => {
-      await socket.sendPresenceUpdate('unavailable', id)
-
-      if (event.type === 'notify') {
-        for (const message of event.messages) {
-          if (!message.key.fromMe) {
-            await delay(1000)
-
-            await socket.sendReceipt(
-              message.key.remoteJid,
-              message.key.participant,
-              [message.key.id],
-              'read',
-            )
-          }
-        }
-      }
-    })
   }
 
   findOne(id: string) {
