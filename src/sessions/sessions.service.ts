@@ -1,4 +1,4 @@
-import { existsSync, lstatSync, readdir, rm, unlinkSync } from 'fs'
+import { readdir, rm, stat } from 'fs/promises'
 import { join } from 'path'
 import {
   BeforeApplicationShutdown,
@@ -34,27 +34,31 @@ export class SessionsService
 
   constructor(private configService: ConfigService) {}
 
-  onApplicationBootstrap() {
-    readdir(this.getSessionPath(), async (err, dirnames) => {
-      if (err) {
-        throw new InternalServerErrorException(err)
-      }
+  async onApplicationBootstrap() {
+    try {
+      const sessionDirnames = await readdir(this.getSessionDirPath())
 
-      for (const dirname of dirnames) {
-        if (!lstatSync(this.getSessionPath(dirname)).isDirectory()) {
+      for (const sessionDirname of sessionDirnames) {
+        const sessionDirStats = await stat(
+          this.getSessionDirPath(sessionDirname),
+        )
+
+        if (!sessionDirStats.isDirectory()) {
           continue
         }
 
         await this.create({
-          id: dirname,
+          id: sessionDirname,
         })
       }
-    })
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create sessions', error)
+    }
   }
 
   beforeApplicationShutdown() {
     this.sessions.forEach((session, sessionId) =>
-      session.store.writeToFile(this.getStorePath(sessionId)),
+      session.store.writeToFile(this.getStoreFilePath(sessionId)),
     )
   }
 
@@ -64,7 +68,7 @@ export class SessionsService
     const store = makeInMemoryStore({})
 
     const { state, saveCreds } = await useMultiFileAuthState(
-      this.getSessionPath(id),
+      this.getSessionDirPath(id),
     )
 
     const socket = makeWASocket({
@@ -74,7 +78,7 @@ export class SessionsService
       syncFullHistory: true,
     })
 
-    store.readFromFile(this.getStorePath(id))
+    store.readFromFile(this.getStoreFilePath(id))
 
     store.bind(socket.ev)
 
@@ -131,7 +135,7 @@ export class SessionsService
         } catch {
           // no-op
         } finally {
-          this.deleteSession(id)
+          await this.deleteSession(id)
         }
       }
     })
@@ -161,7 +165,7 @@ export class SessionsService
     } catch {
       // no-op
     } finally {
-      this.deleteSession(id)
+      await this.deleteSession(id)
     }
   }
 
@@ -204,40 +208,42 @@ export class SessionsService
     return false
   }
 
-  private deleteSession(id: string) {
-    const sessionPath = this.getSessionPath(id)
+  private async deleteSession(id: string) {
+    try {
+      const sessionDirPath = this.getSessionDirPath(id)
 
-    if (existsSync(sessionPath)) {
-      rm(
-        sessionPath,
-        {
+      const sessionDirStats = await stat(sessionDirPath)
+
+      if (sessionDirStats.isDirectory()) {
+        await rm(sessionDirPath, {
           recursive: true,
           force: true,
-        },
-        (err) => {
-          if (err) {
-            throw new InternalServerErrorException(err)
-          }
-        },
-      )
+        })
+      }
+
+      const storeFilePath = this.getStoreFilePath(id)
+
+      const storeFileStats = await stat(storeFilePath)
+
+      if (storeFileStats.isFile()) {
+        await rm(storeFilePath, {
+          force: true,
+        })
+      }
+
+      this.sessions.delete(id)
+
+      this.retries.delete(id)
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to delete session', error)
     }
-
-    const storePath = this.getStorePath(id)
-
-    if (existsSync(storePath)) {
-      unlinkSync(storePath)
-    }
-
-    this.sessions.delete(id)
-
-    this.retries.delete(id)
   }
 
-  private getSessionPath(id?: string) {
+  private getSessionDirPath(id?: string) {
     return join(process.cwd(), 'storage', 'sessions', id || '')
   }
 
-  private getStorePath(id?: string) {
+  private getStoreFilePath(id?: string) {
     return join(process.cwd(), 'storage', 'stores', id ? `${id}.json` : '')
   }
 }
